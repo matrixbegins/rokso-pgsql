@@ -6,10 +6,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-click = "*"
-mysql-connector = "*"
-mysql-connector-python = "*"
-tabulate = "*"
+click = "==7.1.1"
+tabulate = "==0.8.7"
+psycopg2-binary = "*"
 
 [requires]
-python_version = "python 3"
+python_version = "python3"

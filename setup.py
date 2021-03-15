@@ -3,15 +3,15 @@ from setuptools import setup, find_packages, find_namespace_packages
 with open('requirements.txt') as f:
     requirements = f.readlines()
 
-long_description = 'Rokso migration package for mysql database migrations'
+long_description = 'Rokso migration package for PostgreSQL database migrations'
 
 setup(
         name ='rokso',
-        version ='0.1.15',
+        version ='0.1.1',
         author ='Ankur Pandey',
         author_email ='matrixbegins@gmail.com',
-        url ='https://github.com/matrixbegins/rokso-migrations',
-        description ='Rokso migration package for mysql database migrations.',
+        url ='https://github.com/matrixbegins/rokso-pgsql',
+        description ='Rokso migration package for PostgreSQL database migrations.',
         long_description = long_description,
         long_description_content_type ="text/markdown",
         license ='MIT',
@@ -32,7 +32,7 @@ setup(
             "Topic :: Database",
             "Programming Language :: Python :: 3.8",
         ],
-        keywords ='MySql, database-migration, python-database-migration',
+        keywords ='Postgresql, database-migration, python-database-migration',
         install_requires = requirements,
         zip_safe = False
 )
