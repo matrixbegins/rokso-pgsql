@@ -1,6 +1,4 @@
 import click, sys, os, pathlib
-# sys.path.append(pathlib.Path(__file__).parent.absolute())
-
 
 try:
     from .lib import agent
@@ -14,24 +12,28 @@ def cli():
 
 @click.command('init', short_help='🚀 init your migration project. configures db connection parameters')
 @click.option('--projectpath', prompt='Enter path to setup project',
-    required=True, envvar='MIG_DB_PROJECT_PATH', help="The path where the project will be setup. rokso can create this directory if not exists.")
+    required=True, envvar='PG_MIG_DB_PROJECT_PATH', help="The path where the project will be setup. rokso can create this directory if not exists.")
 @click.option('--dbhost', prompt='Enter database hostname ',
-    required=True, envvar='MIG_DB_HOST',
+    required=True, envvar='PG_MIG_DB_HOST',
     help="Database host where rokso will connect to.")
+@click.option('--dbport', prompt='Enter database port [Default:5432]', default=5432,
+    envvar='PG_MIG_DB_PORT_NUMBER', help="Port Number of database.")
 @click.option('--dbname', prompt='Enter database name ',
-    required=True, envvar='MIG_DB_NAME',
+    required=True, envvar='PG_MIG_DB_NAME',
     help="Database name where rokso will apply migrations.")
 @click.option('--dbusername', prompt='Enter database username ',
-    required=True, envvar='MIG_DB_USER', help="Database username for connecting database.")
+    required=True, envvar='PG_MIG_DB_USER', help="Database username for connecting database.")
 @click.option('--dbpassword', prompt='Enter database password',
-    required=True, hide_input=True, envvar='MIG_DB_PASSWORD',
+    hide_input=True, envvar='PG_MIG_DB_PASSWORD',
     help="Database password for connecting database.")
-def init(dbhost, dbname, dbusername, dbpassword, projectpath):
+@click.option('--dbschema', prompt='Enter a schema name [Default:public]', default="public",
+    envvar='PG_MIG_DB_SCHEMA_NAME', help="Default Schema name for the given database.")
+def init(dbhost, dbname, dbusername, dbpassword, projectpath, dbschema, dbport):
     """This commands configures basic environment variables that are needed to cary out database migrations.
     Make sure the given user has ALTER, ALTER ROUTINE, CREATE, CREATE ROUTINE, DELETE, DROP, EXECUTE,
     INDEX, INSERT, SELECT, SHOW DATABASES, UPDATE privileges.
     """
-    agent.init_setup(dbhost, dbname, dbusername, dbpassword, projectpath)
+    agent.init_setup(dbhost, dbname, dbusername, dbpassword, projectpath, dbschema, dbport)
 
 
 @click.command('status', short_help='✅ checks the current state of database and pending migrations')
@@ -50,14 +52,19 @@ def remap():
 
 
 @click.command('create', short_help='➕ create a database migration.')
+@click.option('--dbschema', required=True, prompt='Enter the schema name [Default:Public]', default="public",
+            help="Schema name where this database object will reside.")
+@click.option('--objecttype', prompt='Do you want to create a \n[T]able\n[V]iew\n[M]aterialized View\n[F]unctions\n[D]atabase Type:',
+    default="T", help="The type of database object for which the migration will be created.",
+    type=click.Choice(['T', 'V', 'M', 'F', 'D'], case_sensitive=False ) )
 @click.option('--tablename', required=True, prompt='Enter table/procedure/function name that you want to create this migration for.',
             help="The table/procedure/function name for which you want to create the migration.")
 @click.option('--filename', required=True, prompt='Enter a file name for this migration.',
             help="Name of the migration file.")
-def create(tablename, filename):
-    """ Creates a migration template file for specified table/entity name. """
+def create(tablename, filename, objecttype, dbschema):
+    """ Creates a migration template file for specified table/database object name. """
     click.echo('creating a migration ...........')
-    agent.create_db_migration(tablename, filename)
+    agent.create_db_migration(tablename, filename, objecttype, dbschema)
 
 
 @click.command('migrate', short_help='⤴️  Apply all outstanding migrations to database.')

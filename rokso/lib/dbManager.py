@@ -1,5 +1,5 @@
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+from psycopg2 import Error
 from .connectionManager import ConnectionManager
 from time import time
 
@@ -8,7 +8,8 @@ default_version_table_name = "rokso_db_version"
 class DBManager:
     def __init__(self, config):
         self.revision_table = config.get("version_table_name", default_version_table_name)
-        self.config = {k: config[k] for k in ('host', 'database', 'user', 'password')}
+        self.default_schema = config.get('dbschema', 'public')
+        self.config = {k: config[k] for k in ('host', 'database', 'user', 'password', 'port')}
 
 
     def execute_query(self, sql):
@@ -27,7 +28,7 @@ class DBManager:
             print("There was an error executing sql:: " + sql, "\n ❌", e)
             raise e
         finally:
-            if (connection.is_connected()):
+            if (connection):
                 cursor.close()
                 connection.close()
 
@@ -41,14 +42,20 @@ class DBManager:
             cursor.execute(sql)
             toc = time()
             print(">> Time taken: {}secs ".format(round(toc - tic, 4)) )
-            return cursor.column_names, cursor.fetchall()
+            # print("cursor desc::", cursor.description)
+            # print("cursor list::", self.extract_column_names(cursor))
+            return self.extract_column_names(cursor), cursor.fetchall()
 
         except Error as e:
             print("There was an error executing sql:: " + sql, "\n ❌", e)
         finally:
-            if (connection.is_connected()):
+            if (connection):
                 cursor.close()
                 connection.close()
+
+
+    def extract_column_names(self, cursor):
+        return [col.name for col in cursor.description]
 
 
     def create_version_table(self):
@@ -56,23 +63,20 @@ class DBManager:
 
         sql = """
             CREATE TABLE IF NOT EXISTS {} (
-                id INT auto_increment NOT NULL,
+                id serial PRIMARY KEY,
                 filename varchar(255) NOT NULL,
                 version varchar(100) NOT NULL,
                 status VARCHAR(20) DEFAULT 'pending' NOT NULL,
                 scheduledAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 executedAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-                CONSTRAINT id_PK PRIMARY KEY (id),
-                CONSTRAINT filename_UNQ UNIQUE KEY (filename)
-            ) ENGINE=InnoDB;
+                CONSTRAINT filename_UNQ UNIQUE (filename)
+            );
         """
-        self.execute_query(sql.format(self.revision_table))
-        pass
+        self.execute_query(sql.format(self.get_table_name_with_schema()))
 
 
     def get_database_state(self):
-        return self.select_query("SELECT * FROM {}".format(self.revision_table))
+        return self.select_query("SELECT * FROM {}".format(self.get_table_name_with_schema()))
 
 
     def apply_migration(self, sql, filename, version ):
@@ -90,9 +94,9 @@ class DBManager:
                 INSERT INTO {}
                 (filename, version, status, scheduledAt, executedAt)
                 VALUES('{}', '{}', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON DUPLICATE KEY UPDATE status = '{}', version = '{}', executedAt=CURRENT_TIMESTAMP;
+                ON CONFLICT (filename) DO UPDATE SET status = '{}', version = '{}', executedAt=CURRENT_TIMESTAMP;
             """
-        self.execute_query(sql.format(self.revision_table, filename, version, status, status, version))
+        self.execute_query(sql.format(self.get_table_name_with_schema(), filename, version, status, status, version))
 
 
     def rollback_migration(self, sql, id):
@@ -105,23 +109,29 @@ class DBManager:
 
     def remove_migration(self, id):
         sql = "DELETE FROM {} WHERE id = {} ;"
-        return self.execute_query(sql.format(self.revision_table, id))
+        return self.execute_query(sql.format(self.get_table_name_with_schema(), id))
 
 
     def get_table_definition(self, tablename):
+        #@TODO:: change the SQL to get DDL of table
         return self.select_query("SHOW CREATE TABLE {}".format(tablename))
 
 
     def get_latest_db_revision(self):
-        """ returns """
+        """ returns last successful revision od migration. """
         sql = "SELECT * from {} ORDER BY id DESC LIMIT 1;"
-        return self.select_query(sql.format(self.revision_table))
+        return self.select_query(sql.format(self.get_table_name_with_schema()))
 
 
     def get_migrations_at_revision(self, version):
         sql = """ SELECT * FROM {} WHERE version = '{}' ORDER  BY id desc"""
-        return self.select_query(sql.format(self.revision_table, version))
+        return self.select_query(sql.format(self.get_table_name_with_schema(), version))
+
 
     def get_migrations_more_than_revision(self, version):
         sql = """ SELECT * FROM {} WHERE scheduledAt > (SELECT scheduledAt FROM {} WHERE version = '{}' ORDER  BY id desc LIMIT 1) ORDER BY id DESC; """
-        return self.select_query(sql.format(self.revision_table,self.revision_table, version))
+        return self.select_query(sql.format(self.get_table_name_with_schema(),self.get_table_name_with_schema(), version))
+
+
+    def get_table_name_with_schema(self):
+        return f"{self.default_schema}.{self.revision_table}"

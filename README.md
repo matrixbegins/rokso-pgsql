@@ -1,6 +1,6 @@
 # rokso-migrations
 
-A NOT so simple database migrations utility for Mysql based database migration in python.
+A NOT so simple database migrations utility for Postgresql based database migration in python.
 
 ## Features
 
@@ -89,7 +89,7 @@ drwxr-xr-x  2 user  staff    64B Sep 13 04:26 migration
 Check the table in database
 
 ```
-mysql> desc rokso_db_version;
+psql>\d+ main_schema.rokso_db_version;
 +-------------+--------------+------+-----+-------------------+-------------------+
 | Field       | Type         | Null | Key | Default           | Extra             |
 +-------------+--------------+------+-----+-------------------+-------------------+
@@ -100,7 +100,7 @@ mysql> desc rokso_db_version;
 | scheduledAt | timestamp    | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
 | executedAt  | timestamp    | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
 +-------------+--------------+------+-----+-------------------+-------------------+
-6 rows in set (0.00 sec)
+
 
 ```
 

@@ -8,6 +8,28 @@ from tabulate import tabulate
 json_dict = {}
 initial_dirs = ["migration"]
 
+
+allowed_db_object_types = {
+    "t":        "tables",
+    "tables":   "tables",
+    "table":    "tables",
+
+    "v":    "views",
+    "view": "views",
+    "views": "views",
+
+    "m":    "mat_views",
+
+    "f":            "functions",
+    "function":     "functions",
+    "functions":    "functions",
+
+    "d":         "database_types",
+    "type":     "database_types",
+
+}
+
+
 def custom_exit(CODE, message="", ex=""):
 
     print("\n❌ Oooo... snap     \_(-_-)_/  \n"  )
@@ -24,13 +46,13 @@ def get_cwd():
     return os.getcwd()
 
 
-def init_setup(dbhost, dbname, dbusername, dbpassword, projectpath):
+def init_setup(dbhost:str, dbname:str, dbusername:str, dbpassword:str, projectpath:str, dbschema:str, dbport:str):
     """
         This function will check/create the config.json in project root.
         then it'll check/create the revision table in database
     """
     cwd = get_cwd()
-    json_dict = { "host": dbhost, "database": dbname, "user": dbusername, "password": dbpassword }
+    json_dict = { "host": dbhost, "database": dbname, "user": dbusername, "password": dbpassword, "dbschema": dbschema, "port": dbport }
 
     try:
         CMobj = ConfigManager()
@@ -89,10 +111,10 @@ def db_status():
         print("\nNo new migration to process.\n")
 
 
-def create_db_migration(tablename, filename):
+def create_db_migration(tablename: str, filename: str, db_object_type: str, dbschema: str):
     mg = MigrationManager(get_cwd() + os.path.sep + 'migration')
-
-    mg.create_migration_file(tablename, filename)
+    db_object_type = allowed_db_object_types.get(db_object_type.lower(), "tables")
+    mg.create_migration_file(tablename, filename, db_object_type, dbschema)
 
 
 def apply_migration(migration_file_name):
@@ -130,11 +152,11 @@ Please fix below files and follow the following order to apply migration. """)
         try:
             print("🌀Applying migration file: ", migration_file_name)
             db.apply_migration(sql.get('apply'), migration_file_name, version_no)
-        except Exception as ex:
-            pass
-        finally:
             print("✅ Your database is at revision# {}".format(version_no) )
             print("\n")
+        except Exception as ex:
+            print("Exception in applying migration", ex)
+
 
     else:
         # checking for failed migration. If present then attempt to migrate them first and do not proceed with new migrations.
@@ -230,13 +252,15 @@ def reverse_engineer_db():
         print(tabulate(data, headers=headers))
         print("\n")
 
+        # @TODO:: FIND fix create_migration_file_with_sql
+
         for table in data:
             print('creating migration for table: ', table[0])
             if table[0] != db.revision_table:
                 header, definition = db.get_table_definition(table[0])
                 print(definition[0][0])
                 # print(definition[0][1])
-                migration_file_name = mg.create_migration_file_with_sql(table[0], definition[0][1])
+                migration_file_name = mg.create_migration_file_with_sql(table[0], definition[0][1], todo, todo)
                 # now insert into the migration_version table
                 db.insert_new_migration(migration_file_name, version_no, "complete" )
 
