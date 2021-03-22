@@ -10,33 +10,27 @@ class DBManager:
         self.revision_table = config.get("version_table_name", default_version_table_name)
         self.default_schema = config.get('dbschema', 'public')
         self.config = {k: config[k] for k in ('host', 'database', 'user', 'password', 'port')}
-
+        self.connection = ConnectionManager(self.config).get_connection()
 
     def execute_query(self, sql):
-        connection = ConnectionManager(self.config).get_connection()
         try:
-            cursor = connection.cursor()
+            cursor = self.connection.cursor()
             print("\nExecuting>> ", sql )
             tic = time()
             cursor.execute(sql)
-            connection.commit()
+            self.connection.commit()
             toc = time()
             print("query completed successfully..")
-            print(">> Time taken: {}secs ".format(round(toc - tic, 4)) )
+            print(">> Time taken: {} secs ".format(round(toc - tic, 4)) )
 
         except Error as e:
             print("There was an error executing sql:: " + sql, "\n ❌", e)
             raise e
-        finally:
-            if (connection):
-                cursor.close()
-                connection.close()
 
 
     def select_query(self, sql):
-        connection = ConnectionManager(self.config).get_connection()
         try:
-            cursor = connection.cursor()
+            cursor = self.connection.cursor()
             print("\nExecuting>> ", sql )
             tic = time()
             cursor.execute(sql)
@@ -48,10 +42,6 @@ class DBManager:
 
         except Error as e:
             print("There was an error executing sql:: " + sql, "\n ❌", e)
-        finally:
-            if (connection):
-                cursor.close()
-                connection.close()
 
 
     def extract_column_names(self, cursor):

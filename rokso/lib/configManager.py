@@ -49,4 +49,3 @@ class ConfigManager():
                 self.config = json.loads(f.read())
 
         return self.config
-
