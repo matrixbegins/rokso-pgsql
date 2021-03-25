@@ -1,8 +1,10 @@
 import sys, click, json, os, uuid
+from tabulate import tabulate
+
 from .configManager import ConfigManager
 from .dbManager import DBManager
 from .migrationManager import MigrationManager
-from tabulate import tabulate
+from .remapHelper import find_schemas_to_migrate, remap_schema
 
 
 json_dict = {}
@@ -32,7 +34,7 @@ allowed_db_object_types = {
 
 def custom_exit(CODE, message="", ex=""):
 
-    print("\n❌ Oooo... snap     \_(-_-)_/  \n"  )
+    click.secho("\n❌ Oooo... snap     \_(-_-)_/  \n" , fg='red' )
     if ex!="":
         print(ex)
     if message!="":
@@ -92,7 +94,7 @@ def db_status():
     print(tabulate(completed_migs[-10:], headers=cols))
 
     if len(failed_migs) > 0:
-        print("\n[❗] However we have detected few failed migrations in the past. \n Please fix them first.\n")
+        click.secho("\n[❗] However we have detected few failed migrations in the past. \n Please fix them first.\n", fg='yellow')
         print(tabulate(failed_migs, headers=cols))
         custom_exit(0)
 
@@ -140,9 +142,9 @@ def apply_migration(migration_file_name):
     if migration_file_name:
         # if migration file is not in among the previously failed migrations then do not proceed.
         if len(failed_migs) > 0 and migration_file_name != failed_files[0]:
-            print("""\n[❗] We have detected some failed migrations which still need to be fixed.
+            click.secho("""\n[❗] We have detected some failed migrations which still need to be fixed.
 The given migration file name is not same or belongs to the list of below failed migration.
-Please fix below files and follow the following order to apply migration. """)
+Please fix below files and follow the following order to apply migration. """, fg='yellow')
             print(tabulate(failed_migs, headers=col))
             custom_exit(1)
 
@@ -152,7 +154,7 @@ Please fix below files and follow the following order to apply migration. """)
         try:
             print("🌀Applying migration file: ", migration_file_name)
             db.apply_migration(sql.get('apply'), migration_file_name, version_no)
-            print("✅ Your database is at revision# {}".format(version_no) )
+            click.secho("✅ Your database is at revision# {}".format(version_no), fg='green' )
             print("\n")
         except Exception as ex:
             print("Exception in applying migration", ex)
@@ -161,7 +163,7 @@ Please fix below files and follow the following order to apply migration. """)
     else:
         # checking for failed migration. If present then attempt to migrate them first and do not proceed with new migrations.
         if len(failed_migs) > 0:
-            print("""\n[❗] We have detected some failed migrations. Attempting to run following first.\n Once these are successful run `rokso migrate` again to apply new migrations.""")
+            click.secho("""\n[❗] We have detected some failed migrations. Attempting to run following first.\n Once these are successful run `rokso migrate` again to apply new migrations.""", fg='yellow')
             print(tabulate(failed_migs, headers=col))
             pending_migrations = failed_files
         else:
@@ -178,8 +180,8 @@ Please fix below files and follow the following order to apply migration. """)
                     print("✅ Your database is at revision# {}".format(version_no) )
                     custom_exit(1, "Your migration '{}' has failed. Please fix it and retry.".format(p_mig), ex)
 
-            print("✅ Your database is at revision# {}".format(version_no) )
-            print("\n")
+            click.secho("✅ Your database is at revision# {} \n".format(version_no), fg='green' )
+
         else:
             print("Nothing to migrate ....\n")
 
@@ -231,14 +233,12 @@ def reverse_engineer_db():
         3. create the migration files under "migrations" dir located in project root.
         4. make an entry in version table for that migration
         5. @TODO:: get an optional argument of list of table for which the data should also be dumped.
-        6. @TODO:: create logic for stored procedures, functions and triggers.
     """
     cwd = get_cwd()
-    mg = MigrationManager(cwd + os.path.sep + 'migration')
 
     try:
         db = DBManager(ConfigManager().get_config(cwd).get("database"))
-        cols , data = db.get_database_state()
+        _, data = db.get_database_state()
     except FileNotFoundError as ex:
         custom_exit(1, "It seems the project setup is not complete.\nPlease run `rokso init` first.", ex)
 
@@ -247,24 +247,22 @@ def reverse_engineer_db():
     else:
         print("Starting reverse engineering")
         version_no = str(uuid.uuid4())[:8]
-        headers, data = db.select_query("show tables;")
-        print("I found {} tables in the database... ".format(len(data)))
-        print(tabulate(data, headers=headers))
-        print("\n")
+        click.get_current_context().params["db_version"] = version_no
+        # Find all schemas in the given database that may need migration.
 
-        # @TODO:: FIND fix create_migration_file_with_sql
+        schemas = find_schemas_to_migrate(db)
+        # print("schema names:: ", schemas)
 
-        for table in data:
-            print('creating migration for table: ', table[0])
-            if table[0] != db.revision_table:
-                header, definition = db.get_table_definition(table[0])
-                print(definition[0][0])
-                # print(definition[0][1])
-                migration_file_name = mg.create_migration_file_with_sql(table[0], definition[0][1], todo, todo)
-                # now insert into the migration_version table
-                db.insert_new_migration(migration_file_name, version_no, "complete" )
+        if len(schemas) > 0:
+            for schema in schemas:
+                remap_schema(db, schema)
 
-        print("✅ Reverse engineering of database complete. \n your database is at revision# {}\n".format(version_no))
+            click.secho("✅ Reverse engineering of database complete.", bold=True, fg='green')
+            click.secho("your database is at revision# {}\n".format(version_no), bold=True, blink=True)
+        else:
+            print("\nNo Schema found or selected to reverse engineer")
+            return
+
 
 def last_success():
 
@@ -272,9 +270,13 @@ def last_success():
     try:
         cols , data = db.get_latest_db_revision()
         if len(data) > 0:
-            print(data[0][2])
+            click.secho('Last successful version: ' + data[0][2], fg='green', bold=True)
+
+            sql = "CREATE INDEX pnp_venue_index_policyid ON testsch.pnp_venue USING btree (policyid); CREATE INDEX pnp_venue_index_split_payment ON testsch.pnp_venue USING btree (issplitpaymentdisabled);"
+            db.execute_query(sql)
+
         else:
-            print("No last revion detected")
+            click.secho("No last revision detected", fg='yellow')
             exit(0)
     except Exception as e:
         #print(e.__class__.__name__)

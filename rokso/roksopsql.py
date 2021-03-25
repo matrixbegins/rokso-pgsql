@@ -52,7 +52,7 @@ def remap():
 
 
 @click.command('create', short_help='➕ create a database migration.')
-@click.option('--dbschema', required=True, prompt='Enter the schema name [Default:Public]', default="public",
+@click.option('--dbschema', required=True, prompt='Enter the schema name', default="public",
             help="Schema name where this database object will reside.")
 @click.option('--objecttype', prompt='Do you want to create a \n[T]able\n[V]iew\n[M]aterialized View\n[F]unctions\n[D]atabase Type:',
     default="T", help="The type of database object for which the migration will be created.",

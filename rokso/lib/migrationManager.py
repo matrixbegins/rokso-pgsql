@@ -102,15 +102,17 @@ class MigrationManager:
 
 
     # @TODO:: Re implement for generic database objects.
-    def create_migration_file_with_sql(self, table_name:str, create_sql:str, dbschema:str) -> str:
-        file_name = self.get_new_file_name('create_table_' + table_name )
+    def create_migration_file_with_sql(self, dbschema:str, object_type: str, object_name:str, create_sql:str, drop_sql: str ) -> str:
+        file_name = self.get_new_file_name('create_{}_{}'.format(object_type, object_name) )
 
-        drop_sql = "DROP TABLE IF EXISTS {}.{} ;".format(dbschema,table_name)
         content = migration_file_template % (create_sql, drop_sql)
-        self.create_dir_write_file(table_name, file_name, content, dbschema, "tables")
+        if object_type == 'enums':
+            object_type = 'database_types'  # enums and composite data types will go in same directory as they both are types.
 
-        print("file {}{}{} has been created.".format(table_name, os.path.sep, file_name))
-        return dbschema + os.path.sep + "tables" + os.path.sep + table_name + os.path.sep + file_name
+        self.create_dir_write_file(object_name, file_name, content, object_type, dbschema)
+
+        print("file {}{}{} has been created.".format(object_name, os.path.sep, file_name))
+        return dbschema + os.path.sep + object_type + os.path.sep + object_name + os.path.sep + file_name
 
 
     def get_pending_migrations(self, db_results):

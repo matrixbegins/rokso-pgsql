@@ -102,11 +102,6 @@ class DBManager:
         return self.execute_query(sql.format(self.get_table_name_with_schema(), id))
 
 
-    def get_table_definition(self, tablename):
-        #@TODO:: change the SQL to get DDL of table
-        return self.select_query("SHOW CREATE TABLE {}".format(tablename))
-
-
     def get_latest_db_revision(self):
         """ returns last successful revision od migration. """
         sql = "SELECT * from {} ORDER BY id DESC LIMIT 1;"
