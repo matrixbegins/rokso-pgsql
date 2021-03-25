@@ -272,9 +272,6 @@ def last_success():
         if len(data) > 0:
             click.secho('Last successful version: ' + data[0][2], fg='green', bold=True)
 
-            sql = "CREATE INDEX pnp_venue_index_policyid ON testsch.pnp_venue USING btree (policyid); CREATE INDEX pnp_venue_index_split_payment ON testsch.pnp_venue USING btree (issplitpaymentdisabled);"
-            db.execute_query(sql)
-
         else:
             click.secho("No last revision detected", fg='yellow')
             exit(0)
