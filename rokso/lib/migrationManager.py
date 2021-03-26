@@ -15,6 +15,15 @@ migrations = {
 }
 """
 
+db_object_type_directory = {
+    "enums":            "100.database_types",
+    "database_types":   "100.database_types",
+    "tables":           "200.tables",
+    "views":            "300.views",
+    "mat_views":        "400.mat_views",
+    "functions":        "500.functions"
+}
+
 empty_migration_template = migration_file_template % ('WRITE your DDL/DML query here', 'WRITE your ROLLBACK query here.')
 
 
@@ -68,8 +77,9 @@ class MigrationManager:
         print("[*] migration file {} has been generated".format(new_file_name) )
 
 
-    def create_dir_write_file(self, table_name: str, file_name: str, content: str, db_object_type: str, dbschema: str):
-        dir_path = self.migration_path + os.path.sep + dbschema + os.path.sep + db_object_type + os.path.sep + table_name
+    def create_dir_write_file(self, object_name: str, file_name: str, content: str, db_object_type: str, dbschema: str):
+        dir_path = self.migration_path + os.path.sep + dbschema + os.path.sep \
+            + db_object_type_directory.get(db_object_type) + os.path.sep + object_name
 
         print("migration filepath::", dir_path)
         try:
@@ -101,18 +111,16 @@ class MigrationManager:
         return list1
 
 
-    # @TODO:: Re implement for generic database objects.
     def create_migration_file_with_sql(self, dbschema:str, object_type: str, object_name:str, create_sql:str, drop_sql: str ) -> str:
         file_name = self.get_new_file_name('create_{}_{}'.format(object_type, object_name) )
 
         content = migration_file_template % (create_sql, drop_sql)
-        if object_type == 'enums':
-            object_type = 'database_types'  # enums and composite data types will go in same directory as they both are types.
 
         self.create_dir_write_file(object_name, file_name, content, object_type, dbschema)
 
         print("file {}{}{} has been created.".format(object_name, os.path.sep, file_name))
-        return dbschema + os.path.sep + object_type + os.path.sep + object_name + os.path.sep + file_name
+        return dbschema + os.path.sep + db_object_type_directory.get(object_type) \
+            + os.path.sep + object_name + os.path.sep + file_name
 
 
     def get_pending_migrations(self, db_results):
@@ -127,6 +135,5 @@ class MigrationManager:
         #print(processed_files)
         all_files = self.get_all_migration_files()
         base_path_removed = [f.replace(self.migration_path + os.path.sep, '') for f in all_files]
-        #print("base files names:: ", base_path_removed)
 
         return sorted(list(set(base_path_removed) - set(processed_files)) )

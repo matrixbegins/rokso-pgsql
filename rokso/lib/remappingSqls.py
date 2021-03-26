@@ -68,8 +68,12 @@ find_objects_sql = {
             WHERE   n.nspname = '{}'
             GROUP  BY 1,2;  """,
 
-    "functions": """ select routine_name, routine_definition from information_schema."routines" r
-                    where routine_schema = '{}'; """,
+    "functions": """ select p.proname AS function_name
+                    ,pg_get_functiondef(p.oid) AS func_def
+                    ,pg_get_function_arguments(p.oid) AS args
+                    ,pg_get_function_result(p.oid) AS result
+                FROM   pg_proc p INNER JOIN   pg_namespace n ON n.oid = p.pronamespace
+                WHERE  n.nspname = '{}'; """
 
 }
 

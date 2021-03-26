@@ -74,8 +74,6 @@ def db_status():
     """
     Checks all the migrations processed so far from database
     then checks all pending migrations.
-    1. @TODO:: if referring filenames from database entries
-        devise a way for OS's directory seperator to access files without a problem.
     """
     cwd = get_cwd()
     try:
@@ -90,7 +88,7 @@ def db_status():
     # get any previous failed migrations
     failed_migs = list(filter(lambda el: el[3] == "error", data))
 
-    print("Last few successful migrations: ")
+    click.secho("Last few successful migrations: ", fg='yellow')
     print(tabulate(completed_migs[-10:], headers=cols))
 
     if len(failed_migs) > 0:
@@ -106,7 +104,7 @@ def db_status():
         for pending in pending_migrations:
             toshow.append((pending, 'NA', 'pending'))
 
-        print("\nPending migrations for application: ")
+        click.secho("\nPending migrations for application: ", fg='yellow')
         print(tabulate(toshow, headers=('filename', 'version', 'status')))
         print("\n")
     else:
@@ -123,7 +121,6 @@ def apply_migration(migration_file_name):
     """
         Checks if any previous migration is in
         @TODO:: check lockings for ALTER statements
-        @TODO:: check for all/none or dependencies multi-table entries
     """
     version_no = str(uuid.uuid4())[:8]
     cwd = get_cwd()
