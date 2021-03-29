@@ -26,7 +26,7 @@ pip3 install roksopsql
 
 To see what rokso can do:
 ```
-➜  $> roksopsql --help
+➜  roksopsql --help
 Usage: roksopsql [OPTIONS] COMMAND [ARGS]...
 
 Options:
@@ -62,8 +62,8 @@ There are many ways to initiate your project.
 To start create a directory where you want to create project
 
 ```
-> mkdir tutorial
-> cd tutorial
+➜  mkdir tutorial
+➜  cd tutorial
 ➜  tutorial ✗ roksopsql init
 Enter path to setup project: .
 Enter database hostname : /var/www/projects/python/rokso/tutorial
@@ -84,7 +84,7 @@ You are connected to -  PostgreSQL 13.2 on x86_64-apple-darwin19.6.0, compiled b
 Executing>>
             CREATE TABLE IF NOT EXISTS offline.rokso_db_version (
                 id serial PRIMARY KEY,
-                filename varchar(255) NOT NULL,
+                filename text NOT NULL,
                 version varchar(100) NOT NULL,
                 status VARCHAR(20) DEFAULT 'pending' NOT NULL,
                 scheduledAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -111,7 +111,7 @@ drwxr-xr-x  2 user  staff    64B 29 Mar 19:11 migration
 Check the table in database
 
 ```
-psql>\d+ main_schema.rokso_db_version;
+psql>\d+ offline.rokso_db_version;
 +-------------+--------------+------+-----+-------------------+-------------------+
 | Field       | Type         | Null | Key | Default           | Extra             |
 +-------------+--------------+------+-----+-------------------+-------------------+
@@ -186,6 +186,7 @@ After you have written your DDLs/DMLs in migration files, we are ready to carry 
 Let's create more migrations.
 ```
 # create a migration for a database function.
+
 ➜  tutorial git:(master) ✗ roksopsql create
 Enter the schema name [public]: offline
 Do you want to create a
@@ -219,7 +220,7 @@ working directory::  /var/www/projects/python/rokso/tutorial
 migration filepath:: /var/www/projects/python/rokso/tutorial/migration/online/200.tables/website_user
 [*] migration file 2021_03_29__19_37_31_create_table_website_user.py has been generated
 ```
-After the files are generated, write your DDLs/DMLs those files.
+After the files are generated, write your DDLs/DMLs into those files.
 
 #### Now check database status
 Rokso shows you last few successful migrations and also pending migrations if any.
@@ -391,7 +392,7 @@ Last few successful migrations:
 No new migration to process.
 ```
 
-If all migrations are already carried out and you run `migrate` command again then rokso will do nothing, very much like `git commit`. Also note that the revision number will be same to all files which are applied together.
+If all migrations are already carried out and you run `migrate` command again then rokso will do nothing, very much like `git commit`. **Also note that the revision number will be same to all files which are applied together.**
 
 ```
 ➜  tutorial git:(master) ✗ roksopsql migrate
@@ -405,7 +406,7 @@ It may happen while executing a series of migrations an error can occur in-betwe
 
 ### Rollback migrations
 
-For rolling back migrations, rokso support two modes last successful migration and rolling back to a particular version, just like `git reset`. To ensure rolling back actually works, make sure all the rollback SQLs are properly written in migration files.
+For rolling back migrations, rokso support two modes: last successful migration and rolling back to a particular version, just like `git reset`. To ensure rolling back actually works, make sure all the rollback SQLs are properly written in migration files.
 
 #### Rolling back last migration
 

@@ -54,7 +54,7 @@ class DBManager:
         sql = """
             CREATE TABLE IF NOT EXISTS {} (
                 id serial PRIMARY KEY,
-                filename varchar(255) NOT NULL,
+                filename text NOT NULL,
                 version varchar(100) NOT NULL,
                 status VARCHAR(20) DEFAULT 'pending' NOT NULL,
                 scheduledAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
