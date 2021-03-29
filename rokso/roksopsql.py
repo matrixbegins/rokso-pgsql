@@ -57,9 +57,9 @@ def remap():
 @click.option('--objecttype', prompt='Do you want to create a \n[T]able\n[V]iew\n[M]aterialized View\n[F]unctions\n[D]atabase Type:',
     default="T", help="The type of database object for which the migration will be created.",
     type=click.Choice(['T', 'V', 'M', 'F', 'D'], case_sensitive=False ) )
-@click.option('--tablename', required=True, prompt='Enter table/procedure/function name that you want to create this migration for.',
+@click.option('--tablename', required=True, prompt='Enter table/procedure/function name that you want to create this migration for',
             help="The table/procedure/function name for which you want to create the migration.")
-@click.option('--filename', required=True, prompt='Enter a file name for this migration.',
+@click.option('--filename', required=True, prompt='Enter a file name for this migration',
             help="Name of the migration file.")
 def create(tablename, filename, objecttype, dbschema):
     """ Creates a migration template file for specified table/database object name. """
