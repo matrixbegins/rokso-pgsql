@@ -3,14 +3,20 @@ from setuptools import setup, find_packages, find_namespace_packages
 with open('requirements.txt') as f:
     requirements = f.readlines()
 
-long_description = 'Rokso migration package for PostgreSQL database migrations'
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 
 setup(
-        name ='rokso',
-        version ='0.1.1',
+        name ='roksopsql',
+        version ='0.2.1',
         author ='Ankur Pandey',
         author_email ='matrixbegins@gmail.com',
         url ='https://github.com/matrixbegins/rokso-pgsql',
+        project_urls = {
+            "Bug Tracker": "https://github.com/matrixbegins/rokso-pgsql/issues",
+        },
         description ='Rokso migration package for PostgreSQL database migrations.',
         long_description = long_description,
         long_description_content_type ="text/markdown",
@@ -18,7 +24,7 @@ setup(
         packages=find_namespace_packages(include=['rokso', 'rokso.*', 'rokso.lib.*']),
         entry_points ={
             'console_scripts': [
-                'rokso = rokso.rokso:main'
+                'roksopsql = rokso.roksopsql:main'
             ]
         },
         python_requires='>=3.3',

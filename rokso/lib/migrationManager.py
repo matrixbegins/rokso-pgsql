@@ -126,6 +126,7 @@ class MigrationManager:
     def get_pending_migrations(self, db_results):
         """
             Accepts a resultset of migration table to compare with all migration files on file system and resultset.
+            @TODO:: ensure order of execution of SQLs in accordance with var: db_object_type_directory
         """
         processed_files = []
         for file in db_results:
@@ -137,3 +138,4 @@ class MigrationManager:
         base_path_removed = [f.replace(self.migration_path + os.path.sep, '') for f in all_files]
 
         return sorted(list(set(base_path_removed) - set(processed_files)) )
+
