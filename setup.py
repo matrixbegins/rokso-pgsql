@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
         name ='roksopsql',
-        version ='0.2.1',
+        version ='0.2.2',
         author ='Ankur Pandey',
         author_email ='matrixbegins@gmail.com',
         url ='https://github.com/matrixbegins/rokso-pgsql',
