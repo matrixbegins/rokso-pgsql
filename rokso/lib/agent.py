@@ -199,6 +199,8 @@ def rollback_db_migration(version):
         cols, result = db.get_migrations_more_than_revision(version)
     else:
         cols, result = db.get_latest_db_revision()
+        if len(result) < 1:
+            custom_exit(1, "Rokso is unable to discover previous migrations. Looks like its a fresh project.")
         # getting all the files on the latest revision number
         cols, result = db.get_migrations_at_revision(result[0][2] )
 

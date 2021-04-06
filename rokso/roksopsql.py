@@ -16,7 +16,7 @@ def cli():
 @click.option('--dbhost', prompt='Enter database hostname ',
     required=True, envvar='PG_MIG_DB_HOST',
     help="Database host where rokso will connect to.")
-@click.option('--dbport', prompt='Enter database port [Default:5432]', default=5432,
+@click.option('--dbport', prompt='Enter database port', default=5432,
     envvar='PG_MIG_DB_PORT_NUMBER', help="Port Number of database.")
 @click.option('--dbname', prompt='Enter database name ',
     required=True, envvar='PG_MIG_DB_NAME',
@@ -26,7 +26,7 @@ def cli():
 @click.option('--dbpassword', prompt='Enter database password',
     hide_input=True, envvar='PG_MIG_DB_PASSWORD',
     help="Database password for connecting database.")
-@click.option('--dbschema', prompt='Enter a schema name [Default:public]', default="public",
+@click.option('--dbschema', prompt='Enter a schema name', default="public",
     envvar='PG_MIG_DB_SCHEMA_NAME', help="Default Schema name for the given database.")
 def init(dbhost, dbname, dbusername, dbpassword, projectpath, dbschema, dbport):
     """This commands configures basic environment variables that are needed to cary out database migrations.
