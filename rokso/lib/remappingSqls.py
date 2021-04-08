@@ -3,7 +3,7 @@ find_objects_sql = {
     "schema": """ select schema_name from information_schema.schemata
                 where schema_name not like 'pg_%' and schema_name != 'information_schema';""" ,
 
-    "tables": "SELECT table_name FROM information_schema.tables WHERE table_schema = '{}';",
+    "tables": "SELECT table_name FROM information_schema.tables WHERE table_schema = '{}' and table_type = 'BASE TABLE';",
 
     "views": "select table_name as view_name, view_definition from INFORMATION_SCHEMA.views where table_schema = '{}';",
 
@@ -199,7 +199,9 @@ get_ddl_sqls = {
     "index_of_table": """ select pg_get_indexdef(format('%I.%I', schemaname, indexname)::regclass) as ddl
                 from pg_indexes where schemaname = '{}' and tablename = '{}'; """,
 
-    "get_table_ddl": "select {}.generate_table_ddl( '{}', '{}');"
+    "get_table_ddl": "select {}.generate_table_ddl( '{}', '{}');",
+
+    "mat_view_index_ddl": 'REFRESH MATERIALIZED VIEW CONCURRENTLY {}.{} ;'
 
 }
 

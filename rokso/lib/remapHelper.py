@@ -187,10 +187,12 @@ def generate_migration_files_for_views(db: DBManager, schema: str, view_list: li
         click.secho("  --- No Views found. Skipping Views DDL generation.", fg='yellow')
         return
 
+    create_sql_prefix = 'CREATE VIEW {}.{} AS '
     for vw in view_list:
         view_ddl = vw[1]
         view_name = vw[0]
-        # print(view_name, ' : ', view_ddl)
+        view_ddl = create_sql_prefix.format(schema, view_name) + view_ddl
+        print(view_name, ' : ', view_ddl)
 
         # generate migration file on filesystem.
         save_migration_file_with_db_entry(db, schema, 'views', view_name, view_ddl)
@@ -204,13 +206,29 @@ def generate_migration_files_for_mat_views(db: DBManager, schema: str, view_list
         click.secho("  --- No MATERIALIZED Views found. Skipping MATERIALIZED Views DDL generation.", fg='yellow')
         return
 
+    # MATERIALIZED VIEW have indexes on them so find indexes and create DDL for creating Indexes.
+    create_sql_prefix = 'CREATE MATERIALIZED VIEW {}.{} AS '
+    create_index_sql = get_ddl_sqls.get('index_of_table')
+    refresh_view_sql = get_ddl_sqls.get('mat_view_index_ddl')
     for vw in view_list:
         view_ddl = vw[1]
         view_name = vw[0]
-        # print(view_name, ' : ', view_ddl)
+        view_ddl = create_sql_prefix.format(schema, view_name) + view_ddl
+        print(view_name, ' : ', view_ddl)
+
+        to_file_sql = view_ddl + "\n\n "
+        # get CREATE INDEX statements
+        _, idx_ddl = db.select_query(create_index_sql.format(schema, view_name))
+
+        for ddl in idx_ddl:
+            ddl = ddl[0]
+            to_file_sql += ddl + "; \n"
+
+        # for view to get latest data let's add refresh query as well
+        to_file_sql += refresh_view_sql.format(schema, view_name)
 
         # generate migration file on filesystem.
-        save_migration_file_with_db_entry(db, schema, 'mat_views', view_name, view_ddl)
+        save_migration_file_with_db_entry(db, schema, 'mat_views', view_name, to_file_sql)
 
     click.secho("\nRemapping of MATERIALIZED VIEWS complete", fg='green', bold=True)
 
