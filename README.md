@@ -503,3 +503,47 @@ query completed successfully..
 
 ### Reverse engineer your migrations
 
+
+
+
+## Troubleshooting
+**This code is not tested on windows machine.**
+
+Some times when you run `rokso` over ssh or in some linux system you may get an error as follows:
+
+```
+$ roksopsql init --help
+Traceback (most recent call last):
+  File "/usr/local/bin/roksopsql", line 11, in <module>
+    sys.exit(main())
+  File "/usr/local/lib/python3.6/site-packages/rokso/roksopsql.py", line 102, in main
+    return cli()
+  File "/usr/local/lib/python3.6/site-packages/click/core.py", line 829, in __call__
+    return self.main(*args, **kwargs)
+  File "/usr/local/lib/python3.6/site-packages/click/core.py", line 760, in main
+    _verify_python3_env()
+  File "/usr/local/lib/python3.6/site-packages/click/_unicodefun.py", line 130, in _verify_python3_env
+    " mitigation steps.{}".format(extra)
+RuntimeError: Click will abort further execution because Python 3 was configured to use ASCII as encoding for the environment. Consult https://click.palletsprojects.com/python3/ for mitigation steps.
+
+This system lists a couple of UTF-8 supporting locales that you can pick from. The following suitable locales were discovered: aa_DJ.utf8, aa_ER.utf8, aa_ET.utf8, af_ZA.utf8, am_ET.utf8, an_ES.utf8, ar_AE.utf8, ar_BH.utf8,
+..............
+..............
+
+Click discovered that you exported a UTF-8 locale but the locale system could not pick up from it because it does not exist. The exported locale is 'en_US.UTF-8' but it is not supported
+```
+
+An easy fix could be set proper locale. Check available locales in system:
+```
+locale -a
+```
+or
+```
+locale -a  |grep 'en_.*utf'
+```
+
+For us `en_US.utf8` worked. This can not be configured as below:
+```
+export LC_ALL=en_US.utf8
+export LANG=en_US.utf8
+```
