@@ -214,7 +214,7 @@ def generate_migration_files_for_mat_views(db: DBManager, schema: str, view_list
         view_ddl = vw[1]
         view_name = vw[0]
         view_ddl = create_sql_prefix.format(schema, view_name) + view_ddl
-        print(view_name, ' : ', view_ddl)
+        # print(view_name, ' : ', view_ddl)
 
         to_file_sql = view_ddl + "\n\n "
         # get CREATE INDEX statements
